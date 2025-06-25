@@ -1,0 +1,71 @@
+---
+- name: Configure Frontend Server
+  hosts: frontend
+  become: yes
+  vars:
+    app_dir: /var/www/html
+
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+        update_only: yes
+
+    - name: Install required packages
+      yum:
+        name:
+          - httpd
+          - git
+          - unzip
+        state: present
+
+    - name: Ensure Apache is running and enabled
+      service:
+        name: httpd
+        state: started
+        enabled: yes
+
+    - name: Create app directory if it doesn't exist
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: apache
+        group: apache
+        mode: '0755'
+
+    - name: Copy frontend files to server
+      copy:
+        src: ../frontend/
+        dest: "{{ app_dir }}"
+        owner: apache
+        group: apache
+        mode: '0644'
+
+    - name: Update API URL in script.js
+      replace:
+        path: "{{ app_dir }}/script.js"
+        regexp: 'http://localhost:3000/api/tasks'
+        replace: "http://{{ backend_ip }}:3000/api/tasks"
+      when: backend_ip is defined
+
+    - name: Set proper permissions for web files
+      file:
+        path: "{{ app_dir }}"
+        owner: apache
+        group: apache
+        recurse: yes
+        state: directory
+
+    - name: Restart Apache
+      service:
+        name: httpd
+        state: restarted
+
+    - name: Check if site is accessible
+      uri:
+        url: http://localhost
+        return_content: yes
+      register: webpage
+      failed_when: "'DevOps Project' not in webpage.content"
+      changed_when: false
