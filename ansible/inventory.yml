@@ -1,0 +1,21 @@
+---
+all:
+  children:
+    webservers:
+      children:
+        frontend:
+          hosts:
+            frontend_server:
+              ansible_host: "{{ frontend_ip }}"
+              ansible_user: ec2-user
+              ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+    appservers:
+      children:
+        backend:
+          hosts:
+            backend_server:
+              ansible_host: "{{ backend_ip }}"
+              ansible_user: ec2-user
+              ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+  vars:
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'

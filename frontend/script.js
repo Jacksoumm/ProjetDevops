@@ -1,17 +1,17 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // API URL - will need to be updated based on the backend server
+
     const API_URL = 'http://localhost:3000/api/tasks';
     
-    // DOM Elements
+
     const taskForm = document.getElementById('task-form');
     const tasksList = document.getElementById('tasks-list');
     const taskTitleInput = document.getElementById('task-title');
     const taskDescriptionInput = document.getElementById('task-description');
     
-    // Load tasks when page loads
+
     loadTasks();
     
-    // Add task form submission
+
     taskForm.addEventListener('submit', (e) => {
         e.preventDefault();
         
@@ -22,12 +22,12 @@ document.addEventListener('DOMContentLoaded', () => {
         
         addTask(title, description);
         
-        // Clear form
+
         taskTitleInput.value = '';
         taskDescriptionInput.value = '';
     });
     
-    // Function to load tasks from API
+
     async function loadTasks() {
         try {
             const response = await fetch(API_URL);
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const newTask = await response.json();
             
-            // Add the new task to the UI
+       
             displayTask(newTask);
         } catch (error) {
             console.error('Error adding task:', error);
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Function to delete a task
+  
     async function deleteTask(id) {
         try {
             const response = await fetch(`${API_URL}/${id}`, {
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error('Failed to delete task');
             }
             
-            // Remove the task from the UI
+
             const taskElement = document.getElementById(`task-${id}`);
             if (taskElement) {
                 taskElement.remove();
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Function to display all tasks
+
     function displayTasks(tasks) {
         if (tasks.length === 0) {
             tasksList.innerHTML = '<div class="no-tasks">No tasks found. Add a new task above.</div>';
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tasks.forEach(task => displayTask(task));
     }
     
-    // Function to display a single task
+ 
     function displayTask(task) {
         const taskElement = document.createElement('div');
         taskElement.className = 'task-item';
@@ -115,14 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="delete-btn" data-id="${task.id}">Delete</button>
             </div>
         `;
-        
-        // Add event listener for delete button
+   
         const deleteBtn = taskElement.querySelector('.delete-btn');
         deleteBtn.addEventListener('click', () => {
             deleteTask(task.id);
         });
-        
-        // Add to the list
+
         tasksList.appendChild(taskElement);
     }
 });

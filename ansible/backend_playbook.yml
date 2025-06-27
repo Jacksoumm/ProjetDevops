@@ -1,0 +1,98 @@
+---
+- name: Configure Backend Server
+  hosts: backend
+  become: yes
+  vars:
+    app_dir: /opt/backend
+    node_version: "16.x"
+
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+        update_only: yes
+
+    - name: Install required packages
+      yum:
+        name:
+          - git
+          - unzip
+          - curl
+        state: present
+
+    - name: Set up NodeJS repository
+      shell: |
+        curl -sL https://rpm.nodesource.com/setup_{{ node_version }} | bash -
+      args:
+        creates: /etc/yum.repos.d/nodesource-el.repo
+
+    - name: Install Node.js and npm
+      yum:
+        name:
+          - nodejs
+        state: present
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+
+    - name: Copy backend files to server
+      copy:
+        src: ../backend/
+        dest: "{{ app_dir }}"
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+
+    - name: Install npm dependencies
+      npm:
+        path: "{{ app_dir }}"
+        state: present
+      become_user: ec2-user
+
+    - name: Create systemd service file for Node.js app
+      copy:
+        dest: /etc/systemd/system/backend.service
+        content: |
+          [Unit]
+          Description=Backend Node.js Application
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=ec2-user
+          WorkingDirectory={{ app_dir }}
+          ExecStart=/usr/bin/node {{ app_dir }}/server.js
+          Restart=on-failure
+          Environment=NODE_ENV=production
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable and start backend service
+      systemd:
+        name: backend
+        state: started
+        enabled: yes
+        daemon_reload: yes
+
+    - name: Wait for backend service to start
+      wait_for:
+        port: 3000
+        timeout: 30
+
+    - name: Check if API is accessible
+      uri:
+        url: http://localhost:3000/api/tasks
+        return_content: yes
+      register: api_response
+      failed_when: api_response.status != 200
+      changed_when: false

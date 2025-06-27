@@ -1,0 +1,68 @@
+stages:
+  - validate
+  - plan
+  - security
+
+variables:
+  TERRAFORM_VERSION: "1.0.0"
+  TFLINT_VERSION: "v0.44.1"
+
+before_script:
+  - cd terraform
+
+# Validation stage
+terraform:validate:
+  stage: validate
+  image: hashicorp/terraform:$TERRAFORM_VERSION
+  script:
+    - terraform init -backend=false
+    - terraform validate
+    - terraform fmt -check
+  only:
+    - merge_requests
+    - main
+    - tags
+  allow_failure: true
+
+# Plan stage
+terraform:plan:
+  stage: plan
+  image: hashicorp/terraform:$TERRAFORM_VERSION
+  script:
+    - terraform init -backend=false
+    - terraform plan -no-color
+  only:
+    - merge_requests
+    - main
+    - tags
+  artifacts:
+    paths:
+      - terraform/tfplan
+    expire_in: 1 week
+  allow_failure: true
+
+# Security checks
+tflint:
+  stage: security
+  image: ghcr.io/terraform-linters/tflint:$TFLINT_VERSION
+  script:
+    - tflint --format=compact
+  only:
+    - merge_requests
+    - main
+    - tags
+  allow_failure: true
+
+checkov:
+  stage: security
+  image: bridgecrew/checkov:latest
+  script:
+    - checkov -d . --quiet
+  only:
+    - merge_requests
+    - main
+    - tags
+  allow_failure: true
+
+# Note: We don't include a terraform:apply job because
+# this should be done manually as per the requirements

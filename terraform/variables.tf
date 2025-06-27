@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
-  default     = "eu-west-3"  # Paris region
+  default     = "eu-west-3" 
 }
 
 variable "vpc_cidr" {
@@ -25,13 +25,13 @@ variable "private_subnet_cidr" {
 variable "frontend_instance_type" {
   description = "EC2 instance type for the frontend server"
   type        = string
-  default     = "t2.micro"  # Free tier eligible
+  default     = "t2.micro"  
 }
 
 variable "backend_instance_type" {
   description = "EC2 instance type for the backend server"
   type        = string
-  default     = "t2.micro"  # Free tier eligible
+  default     = "t2.micro"  
 }
 
 variable "ssh_key_name" {

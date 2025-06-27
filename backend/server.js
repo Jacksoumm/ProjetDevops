@@ -3,15 +3,15 @@ const cors = require('cors');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Initialize express app
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+
 app.use(cors());
 app.use(express.json());
 
-// Connect to SQLite database
+
 const dbPath = path.resolve(__dirname, 'database.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -19,7 +19,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     } else {
         console.log('Connected to the SQLite database');
         
-        // Create tasks table if it doesn't exist
+       
         db.run(`
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,9 +31,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     }
 });
 
-// API Routes
 
-// Get all tasks
 app.get('/api/tasks', (req, res) => {
     db.all('SELECT * FROM tasks ORDER BY created_at DESC', [], (err, rows) => {
         if (err) {
@@ -44,7 +42,6 @@ app.get('/api/tasks', (req, res) => {
     });
 });
 
-// Get a single task
 app.get('/api/tasks/:id', (req, res) => {
     const id = req.params.id;
     
@@ -62,7 +59,7 @@ app.get('/api/tasks/:id', (req, res) => {
     });
 });
 
-// Create a new task
+
 app.post('/api/tasks', (req, res) => {
     const { title, description } = req.body;
     
@@ -78,8 +75,7 @@ app.post('/api/tasks', (req, res) => {
                 console.error(err.message);
                 return res.status(500).json({ error: 'Failed to create task' });
             }
-            
-            // Get the newly created task
+     
             db.get('SELECT * FROM tasks WHERE id = ?', [this.lastID], (err, row) => {
                 if (err) {
                     console.error(err.message);
@@ -92,7 +88,7 @@ app.post('/api/tasks', (req, res) => {
     );
 });
 
-// Update a task
+
 app.put('/api/tasks/:id', (req, res) => {
     const id = req.params.id;
     const { title, description } = req.body;
@@ -114,7 +110,7 @@ app.put('/api/tasks/:id', (req, res) => {
                 return res.status(404).json({ error: 'Task not found' });
             }
             
-            // Get the updated task
+     
             db.get('SELECT * FROM tasks WHERE id = ?', [id], (err, row) => {
                 if (err) {
                     console.error(err.message);
@@ -127,7 +123,7 @@ app.put('/api/tasks/:id', (req, res) => {
     );
 });
 
-// Delete a task
+
 app.delete('/api/tasks/:id', (req, res) => {
     const id = req.params.id;
     
@@ -145,12 +141,11 @@ app.delete('/api/tasks/:id', (req, res) => {
     });
 });
 
-// Start the server
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Close the database connection when the app is terminated
 process.on('SIGINT', () => {
     db.close((err) => {
         if (err) {

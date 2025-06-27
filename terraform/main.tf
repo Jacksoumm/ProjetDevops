@@ -12,7 +12,7 @@ provider "aws" {
   region = var.aws_region
 }
 
-# Use data source to get the latest Amazon Linux 2 AMI
+
 data "aws_ami" "amazon_linux_2" {
   most_recent = true
   owners      = ["amazon"]
@@ -28,12 +28,3 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-# Store the state file in S3 (uncomment and configure for production use)
-# terraform {
-#   backend "s3" {
-#     bucket = "your-terraform-state-bucket"
-#     key    = "devops-project/terraform.tfstate"
-#     region = "eu-west-3"
-#     encrypt = true
-#   }
-# }
