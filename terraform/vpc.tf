@@ -12,7 +12,7 @@ resource "aws_vpc" "main" {
   )
 }
 
-# Public Subnet
+# Public Subnet (we'll use only this subnet for all resources to stay within Free Tier)
 resource "aws_subnet" "public" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidr
@@ -27,20 +27,6 @@ resource "aws_subnet" "public" {
   )
 }
 
-# Private Subnet
-resource "aws_subnet" "private" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.private_subnet_cidr
-  availability_zone = "${var.aws_region}b"
-
-  tags = merge(
-    var.project_tags,
-    {
-      Name = "devops-project-private-subnet"
-    }
-  )
-}
-
 # Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
@@ -51,35 +37,6 @@ resource "aws_internet_gateway" "igw" {
       Name = "devops-project-igw"
     }
   )
-}
-
-# Elastic IP for NAT Gateway
-resource "aws_eip" "nat_eip" {
-  vpc = true
-
-  tags = merge(
-    var.project_tags,
-    {
-      Name = "devops-project-nat-eip"
-    }
-  )
-
-  depends_on = [aws_internet_gateway.igw]
-}
-
-# NAT Gateway
-resource "aws_nat_gateway" "nat_gw" {
-  allocation_id = aws_eip.nat_eip.id
-  subnet_id     = aws_subnet.public.id
-
-  tags = merge(
-    var.project_tags,
-    {
-      Name = "devops-project-nat-gw"
-    }
-  )
-
-  depends_on = [aws_internet_gateway.igw]
 }
 
 # Public Route Table
@@ -99,33 +56,10 @@ resource "aws_route_table" "public" {
   )
 }
 
-# Private Route Table
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat_gw.id
-  }
-
-  tags = merge(
-    var.project_tags,
-    {
-      Name = "devops-project-private-rt"
-    }
-  )
-}
-
 # Public Route Table Association
 resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public.id
-}
-
-# Private Route Table Association
-resource "aws_route_table_association" "private" {
-  subnet_id      = aws_subnet.private.id
-  route_table_id = aws_route_table.private.id
 }
 
 # Network ACL for Public Subnet
@@ -163,6 +97,16 @@ resource "aws_network_acl" "public" {
     to_port    = 22
   }
 
+  # Allow API port inbound (for backend)
+  ingress {
+    protocol   = "tcp"
+    rule_no    = 125
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 3000
+    to_port    = 3000
+  }
+
   # Allow ephemeral ports inbound
   ingress {
     protocol   = "tcp"
@@ -187,39 +131,6 @@ resource "aws_network_acl" "public" {
     var.project_tags,
     {
       Name = "devops-project-public-nacl"
-    }
-  )
-}
-
-# Network ACL for Private Subnet
-resource "aws_network_acl" "private" {
-  vpc_id     = aws_vpc.main.id
-  subnet_ids = [aws_subnet.private.id]
-
-  # Allow all inbound from VPC
-  ingress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = var.vpc_cidr
-    from_port  = 0
-    to_port    = 0
-  }
-
-  # Allow all outbound
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 0
-    to_port    = 0
-  }
-
-  tags = merge(
-    var.project_tags,
-    {
-      Name = "devops-project-private-nacl"
     }
   )
 }

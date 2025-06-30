@@ -55,11 +55,11 @@ resource "aws_security_group" "backend" {
 
 
   ingress {
-    from_port       = 3000
-    to_port         = 3000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.frontend.id]
-    description     = "Allow API traffic from frontend"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow API traffic from public internet (since we're using a single instance)"
   }
 
   ingress {

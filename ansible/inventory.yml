@@ -1,20 +1,25 @@
 ---
 all:
   children:
-    webservers:
+    # Combined server hosting both frontend and backend
+    combined_server:
+      hosts:
+        server:
+          ansible_host: "{{ combined_ip }}"
+          ansible_user: ec2-user
+          ansible_ssh_private_key_file: "{{ ssh_key_path }}"
+      # These groups are kept for compatibility with existing playbooks
       children:
         frontend:
           hosts:
             frontend_server:
-              ansible_host: "{{ frontend_ip }}"
+              ansible_host: "{{ combined_ip }}"
               ansible_user: ec2-user
               ansible_ssh_private_key_file: "{{ ssh_key_path }}"
-    appservers:
-      children:
         backend:
           hosts:
             backend_server:
-              ansible_host: "{{ backend_ip }}"
+              ansible_host: "{{ combined_ip }}"
               ansible_user: ec2-user
               ansible_ssh_private_key_file: "{{ ssh_key_path }}"
   vars:

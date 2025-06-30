@@ -46,8 +46,8 @@
       replace:
         path: "{{ app_dir }}/script.js"
         regexp: 'http://localhost:3000/api/tasks'
-        replace: "http://{{ backend_ip }}:3000/api/tasks"
-      when: backend_ip is defined
+        replace: "http://localhost:3000/api/tasks"
+      # No need to replace with external IP since frontend and backend are on the same instance
 
     - name: Set proper permissions for web files
       file:
