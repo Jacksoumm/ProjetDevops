@@ -30,11 +30,7 @@ variable "backend_instance_type" {
   default     = "t2.micro"  
 }
 
-variable "ssh_key_name" {
-  description = "Name of the SSH key pair to use for EC2 instances"
-  type        = string
-  default     = "devops-project-key"
-}
+
 
 variable "project_tags" {
   description = "Tags to apply to resources created by this module"
